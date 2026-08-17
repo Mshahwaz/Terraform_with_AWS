@@ -6,13 +6,6 @@ terraform {
     }
   }
   required_version = ">= 1.15"
-  # backend "s3" {
-  #   bucket = "my-terraform-state-bucket-shah99009"
-  #   key = "origin/tfstate"
-  #   region = "ap-south-1"
-  #   use_lockfile = true
-  #   encrypt = true
-  # }
 }
 
 provider "aws" {

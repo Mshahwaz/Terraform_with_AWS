@@ -8,13 +8,13 @@ terraform {
 
     required_version = ">=1.15"
 
-    backend "s3" {
-      bucket = "my-terraform-state-bucket-shah99009"
-      key = "tfstate"
-      region = "ap-south-1"
-      use_lockfile = true
-      encrypt = true
-    }
+    # backend "s3" {
+    #   bucket = "my-terraform-state-bucket-shah99009"
+    #   key = "tfstate"
+    #   region = "ap-south-1"
+    #   use_lockfile = true
+    #   encrypt = true
+    # }
 }
 
 provider "aws" {
