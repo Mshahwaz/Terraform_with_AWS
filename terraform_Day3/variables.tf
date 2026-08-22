@@ -17,3 +17,11 @@ variable "instance_type" {
   default = "t3.micro"
   type    = string
 }
+variable "key_name" {
+  default = "wazdom1-mum-kp"
+  type    = string
+}
+variable "availability_zone" {
+  default = "ap-south-1c"
+  type    = string
+}
