@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Terraform
 .terraform/
 *.tfstate
@@ -25,3 +26,8 @@ Thumbs.db
 
 # SSH Keys
 keys/
+=======
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+>>>>>>> 53a80eb (Add terra practice files)
