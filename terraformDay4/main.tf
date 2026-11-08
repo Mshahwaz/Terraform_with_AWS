@@ -31,9 +31,9 @@ resource "aws_subnet" "terra_publicsub1" {
 
 resource "aws_subnet" "terra_privatesub1" {
 
-  vpc_id               = aws_vpc.terra_demo_vpc.id
-  cidr_block           = "10.0.120.0/25"
-  availability_zone    = "ap-south-1b"
+  vpc_id            = aws_vpc.terra_demo_vpc.id
+  cidr_block        = "10.0.120.0/25"
+  availability_zone = "ap-south-1b"
   tags = {
 
     Name = "demo_private_subnet1"
@@ -60,9 +60,9 @@ resource "aws_subnet" "terra_publicsub2" {
 
 resource "aws_subnet" "terra_privatesub2" {
 
-  vpc_id               = aws_vpc.terra_demo_vpc.id
-  cidr_block           = "10.0.121.0/25"
-  availability_zone    = "ap-south-1c"
+  vpc_id            = aws_vpc.terra_demo_vpc.id
+  cidr_block        = "10.0.121.0/25"
+  availability_zone = "ap-south-1c"
   tags = {
 
     Name = "demo_private_subnet"
@@ -152,35 +152,35 @@ resource "aws_route_table_association" "public2" {
 
 }
 
-# resource "aws_route_table" "demo_vpc_private_route" {
-#   vpc_id = aws_vpc.terra_demo_vpc.id
+resource "aws_route_table" "demo_vpc_private_route" {
+  vpc_id = aws_vpc.terra_demo_vpc.id
 
-#   route {
+  # route {
 
-#     cidr_block = "0.0.0.0/0"
+  #   cidr_block = "0.0.0.0/0"
 
-#     nat_gateway_id = aws_nat_gateway.demo_natgtw.id
+  #   # nat_gateway_id = aws_nat_gateway.demo_natgtw.id
 
-#   }
+  # }
 
-#   tags = {
-#     Name = "demo_private_route_table"
-#   }
-# }
+  tags = {
+    Name = "demo_private_route_table"
+  }
+}
 
-# resource "aws_route_table_association" "private1" {
+resource "aws_route_table_association" "private1" {
 
-#   subnet_id      = aws_subnet.terra_privatesub1.id
-#   route_table_id = aws_route_table.demo_vpc_private_route.id
+  subnet_id      = aws_subnet.terra_privatesub1.id
+  route_table_id = aws_route_table.demo_vpc_private_route.id
 
-# }
+}
 
-# resource "aws_route_table_association" "private2" {
+resource "aws_route_table_association" "private2" {
 
-#   subnet_id      = aws_subnet.terra_privatesub2.id
-#   route_table_id = aws_route_table.demo_vpc_private_route.id
+  subnet_id      = aws_subnet.terra_privatesub2.id
+  route_table_id = aws_route_table.demo_vpc_private_route.id
 
-# }
+}
 
 
 resource "aws_security_group" "demo_bastion_sg" {
@@ -230,6 +230,14 @@ resource "aws_security_group" "demo_app_sg" {
 
   }
 
+  ingress {
+
+    from_port       = 8
+    to_port         = -1
+    protocol        = "icmp"
+    security_groups = [aws_security_group.demo_bastion_sg.id]
+
+  }
   egress {
 
     from_port   = 0
@@ -247,7 +255,11 @@ resource "aws_security_group" "demo_app_sg" {
 
 }
 
+resource "aws_key_pair" "terra_key" {
 
+  key_name   = "terra_key"
+  public_key = file("terra_key.pub")
+}
 
 resource "aws_instance" "demo_bastion_ins" {
 
@@ -261,7 +273,18 @@ resource "aws_instance" "demo_bastion_ins" {
   ]
 
   associate_public_ip_address = true
-  key_name                    = "test_off_infy.key.pub"
+  key_name                    = aws_key_pair.terra_key.key_name
+
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      instance_interruption_behavior = "terminate"
+      spot_instance_type             = "one-time"
+      max_price                      = "0.0040"
+    }
+
+  }
+
   tags = {
 
     Name = "demo_bastion_host"
@@ -270,21 +293,31 @@ resource "aws_instance" "demo_bastion_ins" {
 
 }
 
-# resource "aws_instance" "demo_app_ins" {
+resource "aws_instance" "demo_app_ins" {
 
-#   ami           = "ami-0c7632fb77f35db43"
-#   instance_type = "t3.micro"
+  ami           = "ami-0c7632fb77f35db43"
+  instance_type = "t3.micro"
 
-#   subnet_id = aws_subnet.terra_privatesub1.id
-#   key_name  = "test_off_infy.key.pub"
-#   vpc_security_group_ids = [
-#     aws_security_group.demo_app_sg.id
-#   ]
+  subnet_id = aws_subnet.terra_privatesub1.id
 
-#   tags = {
+  vpc_security_group_ids = [
+    aws_security_group.demo_app_sg.id
+  ]
+  key_name = aws_key_pair.terra_key.key_name
 
-#     Name = "demo_app_server"
+  instance_market_options {
+    market_type = "spot"
+    spot_options {
+      instance_interruption_behavior = "terminate"
+      spot_instance_type             = "one-time"
+      max_price                      = "0.0040"
+    }
 
-#   }
+  }
+  tags = {
 
-# }
+    Name = "demo_app_server"
+
+  }
+
+}

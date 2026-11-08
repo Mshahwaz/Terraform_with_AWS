@@ -31,3 +31,5 @@ keys/
 *.tfstate
 *.tfstate.*
 >>>>>>> 53a80eb (Add terra practice files)
+
+*key*
