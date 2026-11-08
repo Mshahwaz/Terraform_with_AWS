@@ -1,7 +1,6 @@
 resource "aws_vpc" "terra_demo_vpc" {
 
   cidr_block = "10.0.0.0/16"
-  region     = "ap-south-1"
 
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -18,7 +17,7 @@ resource "aws_subnet" "terra_publicsub1" {
 
   vpc_id                  = aws_vpc.terra_demo_vpc.id
   cidr_block              = "10.0.1.0/24"
-  availability_zone_id    = "aps1-az2"
+  availability_zone       = "ap-south-1b"
   map_public_ip_on_launch = true
   tags = {
 
@@ -34,7 +33,7 @@ resource "aws_subnet" "terra_privatesub1" {
 
   vpc_id               = aws_vpc.terra_demo_vpc.id
   cidr_block           = "10.0.120.0/25"
-  availability_zone_id = "aps1-az2"
+  availability_zone    = "ap-south-1b"
   tags = {
 
     Name = "demo_private_subnet1"
@@ -47,7 +46,7 @@ resource "aws_subnet" "terra_publicsub2" {
 
   vpc_id                  = aws_vpc.terra_demo_vpc.id
   cidr_block              = "10.0.2.0/24"
-  availability_zone_id    = "aps1-az3"
+  availability_zone       = "ap-south-1c"
   map_public_ip_on_launch = true
   tags = {
 
@@ -63,7 +62,7 @@ resource "aws_subnet" "terra_privatesub2" {
 
   vpc_id               = aws_vpc.terra_demo_vpc.id
   cidr_block           = "10.0.121.0/25"
-  availability_zone_id = "aps1-az3"
+  availability_zone    = "ap-south-1c"
   tags = {
 
     Name = "demo_private_subnet"
@@ -104,6 +103,41 @@ resource "aws_route_table" "demo_vpc_public_route" {
   }
 }
 
+
+# resource "aws_eip" "demo_nat_eip" {
+
+#   domain = "vpc"
+
+#   tags = {
+
+#     Name = "demo-nat-eip"
+
+
+#   }
+
+# }
+
+# resource "aws_nat_gateway" "demo_natgtw" {
+
+#   allocation_id = aws_eip.demo_nat_eip.id
+
+#   subnet_id = aws_subnet.terra_publicsub1.id
+
+#   tags = {
+
+
+#     Name = "demo-nat_gtw"
+#   }
+
+#   depends_on = [
+
+#     aws_internet_gateway.terra_demo_vpc_igw
+
+
+#   ]
+
+# }
+
 resource "aws_route_table_association" "public1" {
 
   subnet_id      = aws_subnet.terra_publicsub1.id
@@ -118,35 +152,35 @@ resource "aws_route_table_association" "public2" {
 
 }
 
-resource "aws_route_table" "demo_vpc_private_route" {
-  vpc_id = aws_vpc.terra_demo_vpc.id
+# resource "aws_route_table" "demo_vpc_private_route" {
+#   vpc_id = aws_vpc.terra_demo_vpc.id
 
-  route {
+#   route {
 
-    cidr_block = "0.0.0.0/0"
+#     cidr_block = "0.0.0.0/0"
 
-    nat_gateway_id = aws_nat_gateway.demo_natgtw.id
+#     nat_gateway_id = aws_nat_gateway.demo_natgtw.id
 
-  }
+#   }
 
-  tags = {
-    Name = "demo_private_route_table"
-  }
-}
+#   tags = {
+#     Name = "demo_private_route_table"
+#   }
+# }
 
-resource "aws_route_table_association" "private1" {
+# resource "aws_route_table_association" "private1" {
 
-  subnet_id      = aws_subnet.terra_privatesub1.id
-  route_table_id = aws_route_table.demo_vpc_private_route.id
+#   subnet_id      = aws_subnet.terra_privatesub1.id
+#   route_table_id = aws_route_table.demo_vpc_private_route.id
 
-}
+# }
 
-resource "aws_route_table_association" "private2" {
+# resource "aws_route_table_association" "private2" {
 
-  subnet_id      = aws_subnet.terra_privatesub2.id
-  route_table_id = aws_route_table.demo_vpc_private_route.id
+#   subnet_id      = aws_subnet.terra_privatesub2.id
+#   route_table_id = aws_route_table.demo_vpc_private_route.id
 
-}
+# }
 
 
 resource "aws_security_group" "demo_bastion_sg" {
@@ -214,39 +248,6 @@ resource "aws_security_group" "demo_app_sg" {
 }
 
 
-resource "aws_eip" "demo_nat_eip" {
-
-  domain = "vpc"
-
-  tags = {
-
-    Name = "demo-nat-eip"
-
-
-  }
-
-}
-
-resource "aws_nat_gateway" "demo_natgtw" {
-
-  allocation_id = aws_eip.demo_nat_eip.id
-
-  subnet_id = aws_subnet.terra_publicsub1.id
-
-  tags = {
-
-
-    Name = "demo-nat_gtw"
-  }
-
-  depends_on = [
-
-    aws_internet_gateway.terra_demo_vpc_igw
-
-
-  ]
-
-}
 
 resource "aws_instance" "demo_bastion_ins" {
 
@@ -269,21 +270,21 @@ resource "aws_instance" "demo_bastion_ins" {
 
 }
 
-resource "aws_instance" "demo_app_ins" {
+# resource "aws_instance" "demo_app_ins" {
 
-  ami           = "ami-0c7632fb77f35db43"
-  instance_type = "t3.micro"
+#   ami           = "ami-0c7632fb77f35db43"
+#   instance_type = "t3.micro"
 
-  subnet_id = aws_subnet.terra_privatesub1.id
-  key_name  = "test_off_infy.key.pub"
-  vpc_security_group_ids = [
-    aws_security_group.demo_app_sg.id
-  ]
+#   subnet_id = aws_subnet.terra_privatesub1.id
+#   key_name  = "test_off_infy.key.pub"
+#   vpc_security_group_ids = [
+#     aws_security_group.demo_app_sg.id
+#   ]
 
-  tags = {
+#   tags = {
 
-    Name = "demo_app_server"
+#     Name = "demo_app_server"
 
-  }
+#   }
 
-}
+# }
