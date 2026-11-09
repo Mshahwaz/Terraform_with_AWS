@@ -65,7 +65,7 @@ resource "aws_subnet" "terra_privatesub2" {
   availability_zone = "ap-south-1c"
   tags = {
 
-    Name = "demo_private_subnet"
+    Name = "demo_private_subnet2"
 
   }
 
@@ -215,45 +215,45 @@ resource "aws_security_group" "demo_bastion_sg" {
 
 }
 
-resource "aws_security_group" "demo_app_sg" {
+# resource "aws_security_group" "demo_app_sg" {
 
-  name = "demo-app-sg"
+#   name = "demo-app-sg"
 
-  vpc_id = aws_vpc.terra_demo_vpc.id
+#   vpc_id = aws_vpc.terra_demo_vpc.id
 
-  ingress {
+#   ingress {
 
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.demo_bastion_sg.id]
+#     from_port       = 22
+#     to_port         = 22
+#     protocol        = "tcp"
+#     security_groups = [aws_security_group.demo_bastion_sg.id]
 
-  }
+#   }
 
-  ingress {
+#   ingress {
 
-    from_port       = 8
-    to_port         = -1
-    protocol        = "icmp"
-    security_groups = [aws_security_group.demo_bastion_sg.id]
+#     from_port       = 8
+#     to_port         = -1
+#     protocol        = "icmp"
+#     security_groups = [aws_security_group.demo_bastion_sg.id]
 
-  }
-  egress {
+#   }
+#   egress {
 
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
 
-  }
+#   }
 
-  tags = {
+#   tags = {
 
-    Name = "demo-app-ssh-sg"
+#     Name = "demo-app-ssh-sg"
 
-  }
+#   }
 
-}
+# }
 
 resource "aws_key_pair" "terra_key" {
 
@@ -266,7 +266,7 @@ resource "aws_instance" "demo_bastion_ins" {
   ami           = "ami-0c7632fb77f35db43"
   instance_type = "t3.micro"
 
-  subnet_id = aws_subnet.terra_publicsub1.id
+  subnet_id = aws_subnet.terra_publicsub2.id
 
   vpc_security_group_ids = [
     aws_security_group.demo_bastion_sg.id
@@ -293,31 +293,102 @@ resource "aws_instance" "demo_bastion_ins" {
 
 }
 
-resource "aws_instance" "demo_app_ins" {
+# resource "aws_instance" "demo_app_ins" {
 
-  ami           = "ami-0c7632fb77f35db43"
-  instance_type = "t3.micro"
+#   ami           = "ami-0c7632fb77f35db43"
+#   instance_type = "t3.micro"
 
-  subnet_id = aws_subnet.terra_privatesub1.id
+#   subnet_id = aws_subnet.terra_privatesub1.id
+
+#   vpc_security_group_ids = [
+#     aws_security_group.demo_app_sg.id
+#   ]
+#   key_name = aws_key_pair.terra_key.key_name
+
+#   instance_market_options {
+#     market_type = "spot"
+#     spot_options {
+#       instance_interruption_behavior = "terminate"
+#       spot_instance_type             = "one-time"
+#       max_price                      = "0.0040"
+#     }
+
+#   }
+#   tags = {
+
+#     Name = "demo_app_server"
+
+#   }
+
+# }
+
+resource "aws_security_group" "demo_rds_sg" {
+  name   = "demo-rds-sg"
+  vpc_id = aws_vpc.terra_demo_vpc.id
+
+  ingress {
+    from_port = 5432
+    to_port   = 5432
+    protocol  = "tcp"
+
+    security_groups = [
+      aws_security_group.demo_bastion_sg.id
+    ]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "demo-rds-sg"
+  }
+}
+
+resource "aws_db_subnet_group" "demo_db_subnetgrp" {
+  name = "demo-db-subnet-group"
+
+  subnet_ids = [
+    aws_subnet.terra_privatesub1.id,
+    aws_subnet.terra_privatesub2.id
+  ]
+
+  tags = {
+    Name = "demo-db-subnetgrp"
+  }
+}
+
+resource "aws_db_instance" "demo-rds-ins" {
+  identifier = "demo-postgresql"
+
+  allocated_storage     = 20
+  storage_type          = "gp3"
+  max_allocated_storage = 0
+
+  engine         = "postgres"
+  engine_version = "17.7"
+
+  instance_class = "db.t3.micro"
+
+  db_name  = "app_db"
+  username = "Shahadminpsql"
+  password = "Argonday120!021"
 
   vpc_security_group_ids = [
-    aws_security_group.demo_app_sg.id
+    aws_security_group.demo_rds_sg.id
   ]
-  key_name = aws_key_pair.terra_key.key_name
+  db_subnet_group_name = aws_db_subnet_group.demo_db_subnetgrp.name
+  multi_az             = false
+  availability_zone    = "ap-south-1c"
 
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      instance_interruption_behavior = "terminate"
-      spot_instance_type             = "one-time"
-      max_price                      = "0.0040"
-    }
+  publicly_accessible = false
 
-  }
+  skip_final_snapshot = true
+
   tags = {
-
-    Name = "demo_app_server"
-
+    Name = "demo-rds-postgresql"
   }
-
 }
